@@ -1,161 +1,195 @@
 
-# Concrete Strength Prediction using Neural Networks (Keras)
+# Concrete Strength Prediction with Keras Regression Models
 
 ## Overview
-This project builds and evaluates deep learning regression models using Keras to predict the compressive strength of concrete based on its composition.
+This project uses Keras to build neural network regression models for predicting the compressive strength of concrete from its material composition. The notebook explores how model depth and training configuration affect predictive performance on a tabular dataset.
 
-The dataset includes features such as cement, water, aggregates, and additives, and the goal is to learn a mapping from these inputs to the final strength.
+The target is a continuous numeric value, so this is a regression task rather than a classification task.
 
 ---
 
 ## Dataset
-- Source: IBM Cognitive Class concrete dataset
-- Target variable: `Strength`
-- Features: Cement, Water, Superplasticizer, Coarse Aggregate, Fine Aggregate, etc.
+The dataset contains concrete mixture attributes and the resulting compressive strength.
 
-Example:
-A 28-day-old concrete mix with:
-- Cement: 540
-- Water: 162
-- Superplasticizer: 2.5
-- Coarse Aggregate: 1040
-- Fine Aggregate: 676  
+### Input features
+- Cement
+- Blast Furnace Slag
+- Fly Ash
+- Water
+- Superplasticizer
+- Coarse Aggregate
+- Fine Aggregate
+- Age
 
-→ Strength: 79.99 MPa
+### Target
+- Concrete compressive strength
+
+This setup makes the project a supervised learning problem where the model learns a function:
+
+```text
+f(x) = y
+```
+
+where:
+- `x` = vector of concrete mixture features
+- `y` = predicted compressive strength
 
 ---
 
-## Workflow
+## Method Used
+The notebook uses a feedforward artificial neural network implemented with Keras.
 
-### 1. Data Preparation
-- Split into:
-  - Predictors `X`
-  - Target `y`
-- Normalize features:
+Each hidden layer applies a linear transformation followed by a nonlinear activation:
 
-Plain text formula:
-```
-X_norm = (X - mean(X)) / std(X)
+```text
+z = W x + b
+a = ReLU(z)
 ```
 
----
+where:
+- `W` = weight matrix
+- `x` = input to the layer
+- `b` = bias
+- `a` = output activation
 
-### 2. Model Architecture
+The ReLU activation function is:
 
-Two models were tested:
-
-#### Model 1
-- Input layer
-- 2 hidden layers (50 neurons each, ReLU)
-- Output layer (1 neuron)
-
-#### Model 2 (Deeper)
-- Input layer
-- 5 hidden layers (50 neurons each, ReLU)
-- Output layer
-
----
-
-## Mathematical Formulation
-
-### Neural Network Forward Pass
-
-Each layer computes:
-
-```
-z = W * x + b
-a = activation(z)
-```
-
-For ReLU:
-```
+```text
 ReLU(z) = max(0, z)
 ```
 
-Final output (regression):
-```
-y_hat = output of last layer (linear)
+Because this is a regression problem, the output layer uses a single neuron with linear output:
+
+```text
+y_hat = final layer output
 ```
 
 ---
 
-### Loss Function (Mean Squared Error)
+## Data Normalization
+Before training, the predictors are normalized so that each feature is centered and scaled.
 
-```
-MSE = (1/n) * sum((y - y_hat)^2)
+Plain text formula:
+
+```text
+x_normalized = (x - mean(x)) / std(x)
 ```
 
-This measures prediction error.
+This helps training because features on very different scales can make optimization unstable or slower.
 
 ---
 
-### Optimization (Adam)
+## Loss Function
+The models are trained using mean squared error (MSE), which is standard for regression.
 
-Weights are updated iteratively:
-
+```text
+MSE = (1 / n) * sum((y - y_hat)^2)
 ```
-w = w - learning_rate * gradient(loss)
-```
 
-Adam improves this by using adaptive learning rates and momentum.
+where:
+- `y` = true value
+- `y_hat` = predicted value
+- `n` = number of samples
+
+A lower MSE means the model's predictions are closer to the true concrete strength values.
 
 ---
 
-## Training
+## Optimization
+The notebook uses the Adam optimizer.
 
+In general, neural network training updates weights to reduce the loss:
+
+```text
+w_new = w_old - learning_rate * d(loss)/dw
+```
+
+Adam improves standard gradient descent by adaptively adjusting update sizes for different parameters and typically converges faster in practice.
+
+---
+
+## Model Configurations
+
+### First model
+The first regression model uses:
+- Input layer
+- Hidden layer with 50 neurons and ReLU
+- Hidden layer with 50 neurons and ReLU
+- Output layer with 1 neuron
+
+### Modified model
+The second model increases depth and uses:
+- Input layer
+- 5 hidden layers
+- 50 neurons in each hidden layer
+- ReLU activation in each hidden layer
+- Output layer with 1 neuron
+
+This allows the deeper model to represent more complex nonlinear relationships in the dataset.
+
+---
+
+## Training Setup
+The notebook trains both models for 100 epochs.
+
+### Initial configuration
+- Normalized predictors
+- Validation split: 0.3
 - Epochs: 100
-- Validation split:
-  - Model 1: 30%
-  - Model 2: 10%
 
-Key idea:
-- More layers → higher capacity → better pattern learning
-- Less validation split → more training data → better generalization (if not overfitting)
-
----
-
-## Key Observations
-
-- Increasing hidden layers improves the model’s ability to capture complex relationships.
-- Normalization is critical for stable training.
-- Using more training data (smaller validation split) improves performance.
-- Deep models perform better but risk overfitting if not controlled.
+### Modified configuration
+- Normalized predictors
+- Validation split: 0.1
+- Epochs: 100
+- More hidden layers
 
 ---
 
-## Requirements
+## Why This Works
+A neural network learns patterns by composing multiple transformations across layers. For tabular data like this concrete dataset, the model can learn how combinations of ingredients and age influence compressive strength.
 
-Install dependencies:
-
-```
-pip install numpy==2.0.2 pandas==2.2.3 tensorflow==2.18.0
-```
+A deeper network can represent more complicated functions, which may improve fit when the relationship between inputs and output is not purely linear.
 
 ---
 
-## How to Run
-
-1. Open the notebook
-2. Run all cells sequentially
-3. Ensure all other blocks are commented when testing specific configurations
-
----
-
-## Project Structure
-
-```
+## File
+```text
 Keras-regression-models.ipynb
 ```
 
 ---
 
-## Summary
+## Requirements
+Install the required packages before running the notebook.
 
-This project demonstrates:
-- Regression with neural networks
-- Effect of model depth
-- Importance of normalization
-- Trade-off between training and validation data
+```bash
+pip install numpy pandas tensorflow keras scikit-learn matplotlib
+```
 
-The approach can be generalized to any tabular regression problem.
+---
+
+## How to Run
+1. Open the notebook in Jupyter Notebook or JupyterLab.
+2. Install the required dependencies.
+3. Run the cells in order.
+4. Review the training output for both model configurations.
+
+---
+
+## Project Highlights
+- Regression modeling with Keras
+- Feature normalization
+- Mean squared error loss
+- Adam optimizer
+- Comparison of shallow and deeper neural network architectures
+- Effect of changing validation split
+
+---
+
+## Conclusion
+This project demonstrates how neural networks can be applied to a real-world regression problem using structured data. It also shows that changes in architecture and data split can affect model learning and final performance.
+
+Increasing the number of hidden layers gives the model greater ability to capture complex patterns in the data, which can improve how well it fits the training set and, in turn, strengthen its predictions.
+
+Using a smaller validation split leaves more data available for training, giving the model more examples from which to learn. With access to a larger training set, it can better recognize underlying trends and potentially achieve stronger overall performance.
 ````
